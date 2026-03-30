@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://srv-d75a33n5r7bs73daq86g.onrender.com/api/$1"
+      "destination": "https://quraan-app.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",
