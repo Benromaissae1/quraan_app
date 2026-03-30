@@ -49,6 +49,9 @@ function SurahDetail() {
   const hafsSurah = data.hafs;
   const warshSurah = data.warsh;
 
+  const hafsFullText = hafsSurah.ayahs.map(a => `${a.text} ﴿${toArabicNumbers(a.numberInSurah)}﴾`).join(' ');
+  const warshFullText = warshSurah.ayahs.map(a => `${a.text} ﴿${toArabicNumbers(a.numberInSurah)}﴾`).join(' ');
+
   return (
     <div>
       <div className="detail-header">
@@ -63,20 +66,12 @@ function SurahDetail() {
         <span className="legend-item"><span className="legend-dot hafs-bg"></span> Hafs</span>
       </div>
       
-      <div className="ayahs-container">
-        {hafsSurah.ayahs.map((hafsAyah, index) => {
-          const warshAyah = warshSurah.ayahs[index];
-          if (!warshAyah) return null;
-
-          return (
-            <div key={hafsAyah.numberInSurah} className="ayah">
-              <div className="ayah-text">
-                <TextDiff warshText={warshAyah.text} hafsText={hafsAyah.text} />
-                <span className="ayah-number"> ﴿{toArabicNumbers(hafsAyah.numberInSurah)}﴾</span>
-              </div>
-            </div>
-          );
-        })}
+      <div className="surah-block" style={{ marginTop: '24px' }}>
+        <div className="surah-text-container">
+          <div className="surah-text-line">
+            <TextDiff warshText={warshFullText} hafsText={hafsFullText} />
+          </div>
+        </div>
       </div>
     </div>
   );
