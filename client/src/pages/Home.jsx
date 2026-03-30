@@ -1,29 +1,26 @@
 import { useState, useEffect } from 'react';
-import TextDiff from '../components/TextDiff';
+import { Link } from 'react-router-dom';
 
 function Home() {
-  const [data, setData] = useState({ hafs: [], warsh: [] });
+  const [surahs, setSurahs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const toArabicNumbers = (num) => {
-    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return String(num).replace(/[0-9]/g, function (w) {
-      return arabicNumbers[w];
-    });
-  };
-
   useEffect(() => {
-    fetch('/api/quran/dual')
+    const apiUrl = import.meta.env.PROD 
+      ? 'https://quraan-app.onrender.com/api/surahs' 
+      : '/api/surahs';
+      
+    fetch(apiUrl)
       .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch dual quran data');
+        if (!res.ok) throw new Error('Failed to fetch surahs list');
         return res.json();
       })
       .then(fetchedData => {
-        if (fetchedData.hafs && fetchedData.warsh) {
-          setData(fetchedData);
+        if (fetchedData.data) {
+          setSurahs(fetchedData.data);
         } else {
-          throw new Error('API returned invalid dual structure');
+          throw new Error('API returned invalid surah list structure');
         }
       })
       .catch(err => {
@@ -35,7 +32,7 @@ function Home() {
       });
   }, []);
 
-  if (loading) return <div className="loading">Loading Dual Quran...</div>;
+  if (loading) return <div className="loading">Loading Surahs...</div>;
   if (error) return <div className="error-message">Error: {error}</div>;
 
   return (
@@ -49,27 +46,17 @@ function Home() {
       </header>
       
       <div className="surah-list">
-        {data.hafs.map((hafsSurah, index) => {
-          const warshSurah = data.warsh[index];
-          if (!warshSurah) return null;
-
-          const hafsFullText = hafsSurah.ayahs.map(a => `${a.text} ﴿${toArabicNumbers(a.numberInSurah)}﴾`).join(' ');
-          const warshFullText = warshSurah.ayahs.map(a => `${a.text} ﴿${toArabicNumbers(a.numberInSurah)}﴾`).join(' ');
-
-          return (
-            <div key={hafsSurah.number} className="surah-block">
-              <div className="surah-block-header">
-                <div className="surah-number">{hafsSurah.number}</div>
-                <div className="surah-name-arabic">{hafsSurah.name}</div>
-              </div>
-              <div className="surah-text-container">
-                <div className="surah-text-line">
-                  <TextDiff warshText={warshFullText} hafsText={hafsFullText} />
-                </div>
+        {surahs.map((surah) => (
+          <Link to={`/surah/${surah.number}`} key={surah.number} className="surah-block" style={{ textDecoration: 'none', color: 'inherit', display: 'block', cursor: 'pointer' }}>
+            <div className="surah-block-header" style={{ marginBottom: 0, borderBottom: 'none' }}>
+              <div className="surah-number">{surah.number}</div>
+              <div className="surah-name-arabic">{surah.name}</div>
+              <div className="surah-name-english" style={{ marginLeft: 'auto', fontSize: '1rem', color: '#666' }}>
+                {surah.englishName}
               </div>
             </div>
-          );
-        })}
+          </Link>
+        ))}
       </div>
     </div>
   );

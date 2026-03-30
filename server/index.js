@@ -4,6 +4,12 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Simple in-memory cache to prevent redundant fetches to the external API
+const cache = {
+  surahsList: null,
+  dualSurah: {}
+};
+
 app.use(cors());
 app.use(express.json());
 
@@ -14,12 +20,16 @@ app.get('/', (req, res) => {
 
 // Proxy API to get all Surahs
 app.get('/api/surahs', async (req, res) => {
+  if (cache.surahsList) {
+    return res.json(cache.surahsList);
+  }
   try {
     const response = await fetch('https://api.alquran.cloud/v1/surah');
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
     const data = await response.json();
+    cache.surahsList = data;
     res.json(data);
   } catch (error) {
     console.error('Error fetching surahs:', error);
@@ -81,8 +91,13 @@ app.get('/api/quran/dual', async (req, res) => {
 
 // Proxy API to get dual versions for specific Surah
 app.get('/api/surahs/:id/dual', async (req, res) => {
+  const { id } = req.params;
+  
+  if (cache.dualSurah[id]) {
+    return res.json(cache.dualSurah[id]);
+  }
+  
   try {
-    const { id } = req.params;
     const [hafsRes, warshRes] = await Promise.all([
       fetch(`https://api.alquran.cloud/v1/surah/${id}/quran-uthmani`),
       fetch(`https://api.alquran.cloud/v1/surah/${id}/quran-warsh-asim`)
@@ -93,10 +108,13 @@ app.get('/api/surahs/:id/dual', async (req, res) => {
     if (hafsData.code !== 200 || warshData.code !== 200) {
       throw new Error(`API error`);
     }
-    res.json({ hafs: hafsData.data, warsh: warshData.data });
+    
+    const result = { hafs: hafsData.data, warsh: warshData.data };
+    cache.dualSurah[id] = result;
+    res.json(result);
   } catch (error) {
-    console.error(`Error fetching dual surah ${req.params.id}:`, error);
-    res.status(500).json({ error: `Failed to fetch dual surah ${req.params.id}` });
+    console.error(`Error fetching dual surah ${id}:`, error);
+    res.status(500).json({ error: `Failed to fetch dual surah ${id}` });
   }
 });
 

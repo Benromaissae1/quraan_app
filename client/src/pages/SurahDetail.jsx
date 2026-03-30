@@ -17,7 +17,11 @@ function SurahDetail() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/surahs/${id}/dual`)
+    const apiUrl = import.meta.env.PROD 
+      ? `https://quraan-app.onrender.com/api/surahs/${id}/dual` 
+      : `/api/surahs/${id}/dual`;
+
+    fetch(apiUrl)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch dual surah details');
         return res.json();
